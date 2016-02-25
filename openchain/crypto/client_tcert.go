@@ -20,19 +20,43 @@ under the License.
 package crypto
 
 import (
+	"crypto/x509"
 	"github.com/openblockchain/obc-peer/openchain/crypto/utils"
 )
 
-func (validator *validatorImpl) sign(signKey interface{}, msg []byte) ([]byte, error) {
-	sigma, err := utils.ECDSASign(signKey, msg)
+type tCert interface {
+	GetCertificate() *x509.Certificate
 
-	validator.peer.node.debug("Signing message [% x], sigma [% x].", msg, sigma)
+	Sign(msg []byte) ([]byte, error)
 
-	return sigma, err
+	Verify(signature, msg []byte) error
 }
 
-func (validator *validatorImpl) verify(verKey interface{}, msg, signature []byte) (bool, error) {
-	validator.peer.node.debug("Verifing signature [% x] against message [% x].", signature, msg)
+type tCertImpl struct {
+	client *clientImpl
+	cert   *x509.Certificate
+	sk     interface{}
+}
 
-	return utils.ECDSAVerify(verKey, msg, signature)
+func (tCert *tCertImpl) GetCertificate() *x509.Certificate {
+	return tCert.cert
+}
+
+func (tCert *tCertImpl) Sign(msg []byte) ([]byte, error) {
+	if tCert.sk == nil {
+		return nil, utils.ErrNilArgument
+	}
+
+	return tCert.client.node.sign(tCert.sk, msg)
+}
+
+func (tCert *tCertImpl) Verify(signature, msg []byte) (err error) {
+	ok, err := tCert.client.node.verify(tCert.cert.PublicKey, msg, signature)
+	if err != nil {
+		return
+	}
+	if !ok {
+		return utils.ErrInvalidSignature
+	}
+	return
 }

@@ -17,22 +17,16 @@ specific language governing permissions and limitations
 under the License.
 */
 
-package crypto
+package conf
 
 import (
-	"github.com/openblockchain/obc-peer/openchain/crypto/utils"
+	"crypto/elliptic"
 )
 
-func (validator *validatorImpl) sign(signKey interface{}, msg []byte) ([]byte, error) {
-	sigma, err := utils.ECDSASign(signKey, msg)
+var (
+	defaultCurve elliptic.Curve
+)
 
-	validator.peer.node.debug("Signing message [% x], sigma [% x].", msg, sigma)
-
-	return sigma, err
-}
-
-func (validator *validatorImpl) verify(verKey interface{}, msg, signature []byte) (bool, error) {
-	validator.peer.node.debug("Verifing signature [% x] against message [% x].", signature, msg)
-
-	return utils.ECDSAVerify(verKey, msg, signature)
+func GetDefaultCurve() elliptic.Curve {
+	return defaultCurve
 }

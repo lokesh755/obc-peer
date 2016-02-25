@@ -21,15 +21,10 @@ package utils
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/asn1"
-	"errors"
+	"github.com/openblockchain/obc-peer/openchain/crypto/conf"
 	"math/big"
-)
-
-var (
-	DefaultCurve = elliptic.P384()
 )
 
 // ECDSASignature represents an ECDSA signature
@@ -39,13 +34,14 @@ type ECDSASignature struct {
 
 // NewECDSAKey generates a new ECDSA Key
 func NewECDSAKey() (*ecdsa.PrivateKey, error) {
-	return ecdsa.GenerateKey(DefaultCurve, rand.Reader)
+	return ecdsa.GenerateKey(conf.GetDefaultCurve(), rand.Reader)
 }
 
 // ECDSASignDirect signs
 func ECDSASignDirect(signKey interface{}, msg []byte) (*big.Int, *big.Int, error) {
 	temp := signKey.(*ecdsa.PrivateKey)
-	r, s, err := ecdsa.Sign(rand.Reader, temp, Hash(msg))
+	h := Hash(msg)
+	r, s, err := ecdsa.Sign(rand.Reader, temp, h)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -56,7 +52,8 @@ func ECDSASignDirect(signKey interface{}, msg []byte) (*big.Int, *big.Int, error
 // ECDSASign signs
 func ECDSASign(signKey interface{}, msg []byte) ([]byte, error) {
 	temp := signKey.(*ecdsa.PrivateKey)
-	r, s, err := ecdsa.Sign(rand.Reader, temp, Hash(msg))
+	h := Hash(msg)
+	r, s, err := ecdsa.Sign(rand.Reader, temp, h)
 	if err != nil {
 		return nil, err
 	}
@@ -87,11 +84,13 @@ func ECDSAVerify(verKey interface{}, msg, signature []byte) (bool, error) {
 	//	fmt.Printf("r [%s], s [%s]\n", R, S)
 
 	temp := verKey.(*ecdsa.PublicKey)
-	return ecdsa.Verify(temp, Hash(msg), ecdsaSignature.R, ecdsaSignature.S), nil
+	h := Hash(msg)
+	return ecdsa.Verify(temp, h, ecdsaSignature.R, ecdsaSignature.S), nil
 }
 
 // VerifySignCapability tests signing capabilities
 func VerifySignCapability(tempSK interface{}, certPK interface{}) error {
+	/* TODO: reactive or remove
 	msg := []byte("This is a message to be signed and verified by ECDSA!")
 
 	sigma, err := ECDSASign(tempSK, msg)
@@ -115,6 +114,6 @@ func VerifySignCapability(tempSK interface{}, certPK interface{}) error {
 	}
 
 	//	log.Info("Verifing signature capability...done")
-
+	*/
 	return nil
 }

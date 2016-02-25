@@ -19,20 +19,14 @@ under the License.
 
 package crypto
 
-import (
-	"github.com/openblockchain/obc-peer/openchain/crypto/utils"
-)
+type tCertPool interface {
+	init(client *clientImpl) error
 
-func (validator *validatorImpl) sign(signKey interface{}, msg []byte) ([]byte, error) {
-	sigma, err := utils.ECDSASign(signKey, msg)
+	Start() error
 
-	validator.peer.node.debug("Signing message [% x], sigma [% x].", msg, sigma)
+	Stop() error
 
-	return sigma, err
-}
+	GetNextTCert() (tCert, error)
 
-func (validator *validatorImpl) verify(verKey interface{}, msg, signature []byte) (bool, error) {
-	validator.peer.node.debug("Verifing signature [% x] against message [% x].", signature, msg)
-
-	return utils.ECDSAVerify(verKey, msg, signature)
+	AddTCert(tCert tCert) error
 }
